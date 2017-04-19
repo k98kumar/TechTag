@@ -16,10 +16,13 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
-    private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
+public class MainActivity extends BaseActivity implements View.OnClickListener {
+
+    public FirebaseAuth mAuth;
+    public static FirebaseAuth.AuthStateListener mAuthListener;
 
     private TextView mStatusView;
     private EditText mEmailInput;
@@ -28,6 +31,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button mCreateButton;
 
     private static final String TAG = "AUTH";
+
+    // Create a string to store email and password
+    // for use in other activities. Make sure that
+    // the overridden strings get passed in the
+    // sign-in and createPassword methods, within
+    // the onClick and are overridden
+    public static String emailPass;
+    public static String passwordPass;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,10 +60,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (user != null) {
                     // User signed in
                     Log.d(TAG, "onAuthStateChanged: signed_in:" + user.getUid());
+                    Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
+                    startActivity(mIntent);
                 } else {
                     // User signed out
                     Log.d(TAG, "onAuthStateChanged: signed_out");
                 }
+
             }
         };
     }
@@ -71,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    // Check if finals are okay to be used
     private void createAccount(final String email, final String password) {
 
         Log.d(TAG, "createAccount: " + email);
@@ -95,6 +110,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Log.d("AccountCreation", "createUserWithEmail:onComplete:" + task.isSuccessful());
 
                         if (task.isSuccessful()) {
+                            // Stores the email user inputs to a string for later use
+                            emailPass = email;
+                            passwordPass = password;
                             Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
                             startActivity(mIntent);
                             return;
@@ -117,7 +135,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
     }
 
-    private void signIn(String email, String password) {
+    // Check if finals are okay to be used
+    private void signIn(final String email, final String password) {
 
         Log.d(TAG, "signIn:" + email);
 
@@ -132,6 +151,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
+        final CountDownLatch fuckAndroid = new CountDownLatch(1);
+        final ReturnObject returned = new ReturnObject(false, null, null);
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -140,8 +161,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         // If sign in is successful, open another activity
                         if (task.isSuccessful()) {
-                            Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
-                            startActivity(mIntent);
+                            returned.status = true;
+                            returned.email = email;
+                            returned.password = password;
+                            return;
                         }
 
                         // If sign in fails, display a message to the user.
@@ -156,11 +179,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 }
                             }, 4000);
                         }
+                        fuckAndroid.countDown();
                     }
                 });
+
+        if (returned.status) {
+            // Stores the email user inputs to a string for later use
+            emailPass = returned.email;
+            passwordPass = returned.password;
+            finish();
+            Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
+            startActivity(mIntent);
+        }
     }
 
     private void signOut() {
+        Log.d(TAG, "signOut: Complete");
         mAuth.signOut();
     }
 
@@ -171,6 +205,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             createAccount(mEmailInput.getText().toString(), mPasswordInput.getText().toString());
         } else if (i == R.id.signInButton) {
             signIn(mEmailInput.getText().toString(), mPasswordInput.getText().toString());
+        } else if (i == R.id.action_sign_out) {
+            signOut();
+        }
+    }
+
+    private class ReturnObject {
+
+        public boolean status;
+        public String email;
+        public String password;
+
+        public ReturnObject(boolean status, String email, String password) {
+            this.status = status;
+            this.email = email;
+            this.password = password;
         }
     }
 }

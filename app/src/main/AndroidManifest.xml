@@ -42,10 +42,8 @@
         <activity
             android:name=".MapLocations"
             android:label="@string/title_activity_map_locations" />
-
-        <activity
-            android:name=".ListPlayers" />
-
+        <activity android:name=".ListPlayers" />
+        <activity android:name=".BaseActivity"></activity>
     </application>
 
 </manifest>

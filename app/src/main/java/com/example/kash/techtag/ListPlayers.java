@@ -3,7 +3,7 @@ package com.example.kash.techtag;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class ListPlayers extends AppCompatActivity {
+public class ListPlayers extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

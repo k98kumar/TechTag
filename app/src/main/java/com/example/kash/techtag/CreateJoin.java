@@ -2,15 +2,20 @@ package com.example.kash.techtag;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-public class CreateJoin extends AppCompatActivity {
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+public class CreateJoin extends BaseActivity {
 
     String createOrJoin = "";
 
@@ -29,7 +34,6 @@ public class CreateJoin extends AppCompatActivity {
         codeInput.setFocusable(false);
         codeInput.setHintTextColor(Color.parseColor("#999999"));
 
-
         createBox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -37,7 +41,9 @@ public class CreateJoin extends AppCompatActivity {
                 createView.setTextColor(Color.parseColor("#FFFFFF"));
                 joinBox.setBackground(getDrawable(R.color.white));
                 joinView.setTextColor(Color.parseColor("#000000"));
-                codeInput.setFocusableInTouchMode(false);
+                codeInput.setFocusable(false);
+                // codeInput.setFocusable(true);
+                // codeInput.setFocusableInTouchMode(true);
                 codeInput.setTextColor(Color.parseColor("#000000"));
                 createOrJoin = "create";
             }
@@ -50,6 +56,22 @@ public class CreateJoin extends AppCompatActivity {
                 joinView.setTextColor(Color.parseColor("#FFFFFF"));
                 createBox.setBackground(getDrawable(R.color.white));
                 createView.setTextColor(Color.parseColor("#000000"));
+                codeInput.setFocusable(true);
+                codeInput.setFocusableInTouchMode(true);
+                codeInput.setTextColor(Color.parseColor("#FFFFFF"));
+                createOrJoin = "join";
+            }
+        });
+
+
+        codeInput.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                joinBox.setBackground(getDrawable(R.color.loginBlue));
+                joinView.setTextColor(Color.parseColor("#FFFFFF"));
+                createBox.setBackground(getDrawable(R.color.white));
+                createView.setTextColor(Color.parseColor("#000000"));
+                codeInput.setFocusable(true);
                 codeInput.setFocusableInTouchMode(true);
                 codeInput.setTextColor(Color.parseColor("#FFFFFF"));
                 createOrJoin = "join";
@@ -73,6 +95,26 @@ public class CreateJoin extends AppCompatActivity {
                 }
             }
         });
+
+        /*
+        MainActivity.mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User signed in
+                    Log.d(TAG, "onAuthStateChanged: signed_in:" + user.getUid());
+                    Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
+                    startActivity(mIntent);
+                } else {
+                    // User signed out
+                    Log.d(TAG, "onAuthStateChanged: signed_out");
+                }
+
+            }
+        };
+        */
+
     }
 
 }
