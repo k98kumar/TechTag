@@ -28,4 +28,22 @@
     <string name="action_info">Info</string>
     <string name="action_sign_out">Sign Out</string>
 
+    <string name="inst_display">Instructions</string>
+    <string name="number_1">1.</string>
+    <string name="number_2">2.</string>
+    <string name="number_3">3.</string>
+    <string name="number_4">4.</string>
+    <string name="instructions_step_1">
+        Log in with your email and password. Each email can only be used once.
+    </string>
+    <string name="instructions_step_2">
+
+    </string>
+    <string name="instructions_step_3">
+
+    </string>
+    <string name="instructions_step_4">
+
+    </string>
+
 </resources>

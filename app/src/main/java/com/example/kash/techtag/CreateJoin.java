@@ -18,11 +18,19 @@ import com.google.firebase.auth.FirebaseUser;
 public class CreateJoin extends BaseActivity {
 
     String createOrJoin = "";
+    int code;
+
+    String currentUserEmail;
+
+    boolean isCreate = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_join);
+
+        // Get the email of the user from previous activity
+        currentUserEmail = getIntent().getStringExtra("EMAIL");
 
         final Button selectButton = (Button) findViewById(R.id.selectButtonCreateJoin);
         final ConstraintLayout createBox = (ConstraintLayout) findViewById(R.id.createFrame);
@@ -83,6 +91,7 @@ public class CreateJoin extends BaseActivity {
             public void onClick(View v) {
                 switch (createOrJoin) {
                     case "create" :
+                        code = (int) (Math.random() * 99999999 + 1);
                         break;
                     case "join" :
                         if (codeInput.toString().equals("")) { // Rewrite what it equals
@@ -96,25 +105,26 @@ public class CreateJoin extends BaseActivity {
             }
         });
 
-        /*
-        MainActivity.mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    // User signed in
-                    Log.d(TAG, "onAuthStateChanged: signed_in:" + user.getUid());
-                    Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
-                    startActivity(mIntent);
-                } else {
-                    // User signed out
-                    Log.d(TAG, "onAuthStateChanged: signed_out");
-                }
-
-            }
-        };
-        */
-
     }
+
+    // For create:
+    // -Create a code
+    //  OR
+    // -Create a boolean and initialize to false.
+    // -If createOrJoin is "create" set boolean to true.
+    // -Use an intent to pass the boolean to the ListPlayers activity
+    //  with intent.putExtra("CreateOrJoin", boolean);
+    // -Get the boolean back with boolean b = getIntent.getExtraString("CreateOrJoin")
+    // -Create a code when boolean is true in second activity
+    // -Check if database already has that code
+    // -If it does keep generating codes
+
+    // For join:
+    // -Create a boolean and initialize to false. (Same as create)
+    // -createOrJoin is "join" so keep boolean as false.
+    // -Use intent to pass boolean with intent.putExtra("CreateOrJoin", boolean) (Same as create)
+    // -Get the boolean back
+    // -
+    // -
 
 }

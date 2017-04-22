@@ -2,11 +2,9 @@ package com.example.kash.techtag;
 
 import android.content.Intent;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -19,26 +17,29 @@ import com.google.firebase.auth.FirebaseUser;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends BaseActivity implements View.OnClickListener {
+// - pass email and uid in intent.putExtra()
+// -   email : intent.putExtra("EMAIL", user.getEmail());
+// -   uid   : intent.putExtra("UID", user.getUid());
+// - get email and uid in next activity
+// -   email :
+// -   uid   :
 
-    public FirebaseAuth mAuth;
-    public static FirebaseAuth.AuthStateListener mAuthListener;
+public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     private TextView mStatusView;
     private EditText mEmailInput;
     private EditText mPasswordInput;
-    private Button mSignInButton;
-    private Button mCreateButton;
 
     private static final String TAG = "AUTH";
+
+    String emailPass;
+    String uidPass;
 
     // Create a string to store email and password
     // for use in other activities. Make sure that
     // the overridden strings get passed in the
     // sign-in and createPassword methods, within
     // the onClick and are overridden
-    public static String emailPass;
-    public static String passwordPass;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +49,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         mStatusView = (TextView) findViewById(R.id.statusOutput);
         mEmailInput = (EditText) findViewById(R.id.emailInput);
         mPasswordInput = (EditText) findViewById(R.id.passwordInput);
-        mSignInButton = (Button) findViewById(R.id.signInButton);
-        mCreateButton = (Button) findViewById(R.id.createAccountButton);
 
         mAuth = FirebaseAuth.getInstance();
 
@@ -58,9 +57,20 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
+                    // Collect current user's email and uid
+                    emailPass = user.getEmail();
+                    uidPass = user.getUid();
                     // User signed in
                     Log.d(TAG, "onAuthStateChanged: signed_in:" + user.getUid());
+                    Log.d(TAG, "onAuthStateChanged: " + user.getEmail());
+                    Log.d(TAG, "onAuthStateChanged: test" + user.getDisplayName());
+
+                    // Intent
                     Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
+                    // putExtras
+                    mIntent.putExtra("EMAIL", emailPass);
+                    mIntent.putExtra("UID", uidPass);
+                    // start Intent
                     startActivity(mIntent);
                 } else {
                     // User signed out
@@ -111,9 +121,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
                         if (task.isSuccessful()) {
                             // Stores the email user inputs to a string for later use
-                            emailPass = email;
-                            passwordPass = password;
                             Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
+                            // Can only store email.
+                            // Uid comes after database registers email
+                            mIntent.putExtra("EMAIL", email);
                             startActivity(mIntent);
                             return;
                         }
@@ -185,22 +196,18 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
         if (returned.status) {
             // Stores the email user inputs to a string for later use
-            emailPass = returned.email;
-            passwordPass = returned.password;
             finish();
             Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
+            // Can only store email.
+            // Uid comes after database registers email
+            // Uid will be found
+            mIntent.putExtra("EMAIL", returned.email);
             startActivity(mIntent);
         }
     }
 
-    private void signOut() {
-        Log.d(TAG, "signOut: Complete");
-        mAuth.signOut();
-    }
-
     @Override
-    public void onClick(View v) {
-        int i = v.getId();
+    public void onClick(View v) {int i = v.getId();
         if (i == R.id.createAccountButton) {
             createAccount(mEmailInput.getText().toString(), mPasswordInput.getText().toString());
         } else if (i == R.id.signInButton) {
