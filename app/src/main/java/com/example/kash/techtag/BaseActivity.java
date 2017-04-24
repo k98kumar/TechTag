@@ -27,6 +27,11 @@ public class BaseActivity extends AppCompatActivity {
         Log.d(TAG, "signOut: Should start login screen activity");
     }
 
+    void openInfo() {
+        Intent mIntent = new Intent(this, Instructions.class);
+        startActivity(mIntent);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +54,7 @@ public class BaseActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_info) {
+            openInfo();
             return true;
         }
         if (id == R.id.action_sign_out) {

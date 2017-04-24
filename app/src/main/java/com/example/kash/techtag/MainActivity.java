@@ -207,7 +207,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     }
 
     @Override
-    public void onClick(View v) {int i = v.getId();
+    public void onClick(View v) {
+        int i = v.getId();
         if (i == R.id.createAccountButton) {
             createAccount(mEmailInput.getText().toString(), mPasswordInput.getText().toString());
         } else if (i == R.id.signInButton) {
