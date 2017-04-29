@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -26,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 // -   email :
 // -   uid   :
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     private TextView mStatusView;
     private EditText mEmailInput;
@@ -56,8 +55,33 @@ public class MainActivity extends BaseActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        setUpAuthListener();
-        setUpButtons();
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // Collect current user's email and uid
+                    emailPass = user.getEmail();
+                    uidPass = user.getUid();
+                    // User signed in
+                    Log.d(TAG, "onAuthStateChanged: signed_in:" + user.getUid());
+                    Log.d(TAG, "onAuthStateChanged: " + user.getEmail());
+                    Log.d(TAG, "onAuthStateChanged: test" + user.getDisplayName());
+
+                    // Intent
+                    Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
+                    // putExtras
+                    mIntent.putExtra("EMAIL", emailPass);
+                    mIntent.putExtra("UID", uidPass);
+                    // start Intent
+                    startActivity(mIntent);
+                } else {
+                    // User signed out
+                    Log.d(TAG, "onAuthStateChanged: signed_out");
+                }
+
+            }
+        };
     }
 
     /**
@@ -126,13 +150,13 @@ public class MainActivity extends BaseActivity {
                         Log.d("AccountCreation", "createUserWithEmail:onComplete:" + task.isSuccessful());
 
                         if (task.isSuccessful()) {
-
                             // Stores the email user inputs to a string for later use
                             Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
                             // Can only store email.
                             // Uid comes after database registers email
                             mIntent.putExtra("EMAIL", email);
-                            MainActivity.this.startActivity(mIntent);
+                            startActivity(mIntent);
+                            return;
                         }
 
                         // If sign in fails, display a message to the user.
@@ -150,36 +174,6 @@ public class MainActivity extends BaseActivity {
 
                     }
                 });
-    }
-
-    private void setUpAuthListener() {
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    // Collect current user's email and uid
-                    emailPass = user.getEmail();
-                    uidPass = user.getUid();
-
-                    // User signed in
-                    Log.d(TAG, "onAuthStateChanged: signed_in:" + user.getUid());
-                    Log.d(TAG, "onAuthStateChanged: " + user.getEmail());
-
-                    // Intent
-                    Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
-                    /* Pass info through intent
-                       mIntent.putExtra("EMAIL", emailPass);
-                       mIntent.putExtra("UID", uidPass); */
-                    // start Intent
-                    MainActivity.this.startActivity(mIntent);
-                } else {
-                    // User signed out
-                    Log.d(TAG, "onAuthStateChanged: signed_out");
-                }
-
-            }
-        };
     }
 
     /**
@@ -206,6 +200,8 @@ public class MainActivity extends BaseActivity {
             return;
         }
 
+        final CountDownLatch fuckAndroid = new CountDownLatch(1);
+        final ReturnObject returned = new ReturnObject(false, null, null);
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -214,9 +210,10 @@ public class MainActivity extends BaseActivity {
 
                         // If sign in is successful, open another activity
                         if (task.isSuccessful()) {
-                            Intent createJoinIntent = new Intent(MainActivity.this, CreateJoin.class);
-                            createJoinIntent.putExtra("EMAIL", email);
-                            MainActivity.this.startActivity(createJoinIntent);
+                            returned.status = true;
+                            returned.email = email;
+                            returned.password = password;
+                            return;
                         }
 
                         // If sign in fails, display a message to the user.
@@ -231,25 +228,54 @@ public class MainActivity extends BaseActivity {
                                 }
                             }, 4000);
                         }
+                        fuckAndroid.countDown();
                     }
                 });
+
+        if (returned.status) {
+            // Stores the email user inputs to a string for later use
+            finish();
+            Intent mIntent = new Intent(MainActivity.this, CreateJoin.class);
+            // Can only store email.
+            // Uid comes after database registers email
+            // Uid will be found
+            mIntent.putExtra("EMAIL", returned.email);
+            startActivity(mIntent);
+        }
     }
 
-    private void setUpButtons() {
-        Button createAccountButton = (Button) this.findViewById(R.id.createAccountButton);
-        createAccountButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                createAccount(mEmailInput.getText().toString(), mPasswordInput.getText().toString());
-            }
-        });
+    @Override
+    public void onClick(View v) {
+        int i = v.getId();
+        if (i == R.id.createAccountButton) {
+            createAccount(mEmailInput.getText().toString(), mPasswordInput.getText().toString());
+        } else if (i == R.id.signInButton) {
+            signIn(mEmailInput.getText().toString(), mPasswordInput.getText().toString());
+        }
+    }
 
-        Button signInButton = (Button) this.findViewById(R.id.signInButton);
-        signInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signIn(mEmailInput.getText().toString(), mPasswordInput.getText().toString());
-            }
-        });
+
+    private class ReturnObject {
+
+        boolean status;
+        String email;
+        String password;
+
+        /**
+         * /**
+         * Creates an object ReturnObject to solve a sign
+         * in method error that boolean could not be
+         * changed. The previously restricted boolean can
+         * now be changed.
+         * @param status    Triggers the creation of intent
+         *                  to open a new activity
+         * @param email     Stores the current user's email
+         * @param password  Stores the current user's password
+         */
+        public ReturnObject(boolean status, String email, String password) {
+            this.status = status;
+            this.email = email;
+            this.password = password;
+        }
     }
 }
