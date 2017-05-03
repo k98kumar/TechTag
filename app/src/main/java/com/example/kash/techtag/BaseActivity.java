@@ -13,6 +13,23 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+/*
+    To delete a complete node (if ever needed)
+    @Override
+    public void onClick(View v) {
+        mDatabase.child("groups").child(getIntent().getStringExtra("GROUP_CODE")).runTransaction(new Transaction.Handler() {
+            @Override
+            public Transaction.Result doTransaction(MutableData mutableData) {
+                mutableData.setValue(null);
+                return Transaction.success(mutableData);
+            }
+            @Override
+            public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
+            }
+        });
+    }
+ */
+
 public class BaseActivity extends AppCompatActivity {
 
     static FirebaseAuth mAuth;

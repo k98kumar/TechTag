@@ -37,13 +37,13 @@
         Log in with your email and password. Each email can only be used once.
     </string>
     <string name="instructions_step_2">
-
+        Select is you want to create a group or join a group. Add a name of a group that you want to create or join.
     </string>
     <string name="instructions_step_3">
-
+        The list of people currently in the group will be displayed in the list. Press continue to activate the game.
     </string>
     <string name="instructions_step_4">
-
+        The other people in your group will show up as point on the map. To tag another person, press the volume up button then the volume down button in that order in under 3/4 of a second.
     </string>
     <string name="create_join_name_instructions">Choose a New or Existing Group Name</string>
     <string name="option_not_selected">Create / Join Option not Selected</string>

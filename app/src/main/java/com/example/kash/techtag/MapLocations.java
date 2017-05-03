@@ -1,17 +1,26 @@
 package com.example.kash.techtag;
 
+import android.content.pm.PackageManager;
 import android.graphics.drawable.BitmapDrawable;
+
+import com.google.android.gms.location.LocationListener;
+
+import android.location.Location;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.View;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -23,23 +32,61 @@ import java.lang.reflect.Array;
 import java.security.Key;
 import java.util.ArrayList;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+
+import static com.google.android.gms.maps.model.LatLngBounds.*;
+
 //public class MapLocations extends FragmentActivity implements OnMapReadyCallback {
-public class MapLocations extends BaseActivity implements OnMapReadyCallback {
+public class MapLocations extends BaseActivity implements OnMapReadyCallback, ConnectionCallbacks, OnConnectionFailedListener, LocationListener {
 
     private GoogleMap mMap;
 
     long volumeUpPress = -1;
     long volumeDownPress = -1;
 
+    Marker molineMarker;
+    Marker sydneyMarker;
+
+    protected GoogleApiClient mGoogleApiClient;
+    protected LocationRequest mLocationRequest;
+    protected LocationSettingsRequest mLocationSettingsRequest;
+    protected Location mCurrentLocation;
+
+    private static final String TAG = "MAPS_ACTIVITY";
+    boolean mRequestingLocationUpdates;
+    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 1000;
+    public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
+            UPDATE_INTERVAL_IN_MILLISECONDS / 2;
+    String currentUserEmail;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_locations);
 
+        currentUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        mRequestingLocationUpdates = false;
+
+        buildGoogleApiClient();
+        createLocationRequest();
+        buildLocationSettingsRequest();
     }
 
 
@@ -71,7 +118,8 @@ public class MapLocations extends BaseActivity implements OnMapReadyCallback {
         ArrayList<Marker> mapMarkers = new ArrayList<>();
         // Add a marker in Sydney and move the camera
         LatLng sydney = new LatLng(-34, 151);
-        Marker sydneyMarker = mMap.addMarker(new MarkerOptions()
+        /*Marker*/
+        sydneyMarker = mMap.addMarker(new MarkerOptions()
                 .position(sydney)
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
                 .title("Sydney"));
@@ -79,7 +127,8 @@ public class MapLocations extends BaseActivity implements OnMapReadyCallback {
         // mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
 
         LatLng moline = new LatLng(41.5067, -90.5151);
-        Marker molineMarker = mMap.addMarker(new MarkerOptions()
+        /*Marker*/
+        molineMarker = mMap.addMarker(new MarkerOptions()
                 .position(moline)
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
                 .title("Moline"));
@@ -87,7 +136,7 @@ public class MapLocations extends BaseActivity implements OnMapReadyCallback {
         mapMarkers.add(sydneyMarker);
         mapMarkers.add(molineMarker);
 
-        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        Builder builder = new Builder();
         for (Marker marker : mapMarkers) {
             builder.include(marker.getPosition());
         }
@@ -95,10 +144,10 @@ public class MapLocations extends BaseActivity implements OnMapReadyCallback {
         int padding = 200; // offset from edges of the map in pixels
         CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
         mMap.moveCamera(cu);
-
     }
 
     /**
+     * As of 2017 April 20 testing, this method works.
      * Player uses the volume up and down buttons to tag another
      * player by pressing the volume up button and then the
      * volume down button within 750 milliseconds.
@@ -107,7 +156,7 @@ public class MapLocations extends BaseActivity implements OnMapReadyCallback {
      * variables get reset to their original values of -1.
      * @param keyCode   The keycode of the button being pressed
      * @param event     The event that the button is undergoing
-     * @return  True when one of the keys listed.
+     * @return True when one of the keys listed.
      *          The return of the original function that is
      *          being overridden.
      */
@@ -132,5 +181,62 @@ public class MapLocations extends BaseActivity implements OnMapReadyCallback {
         }
         return super.onKeyDown(keyCode, event);
     }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        //mDatabase.child("groups").child()
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        if (mCurrentLocation == null) {
+            mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        }
+        if (mRequestingLocationUpdates) {
+            Log.i(TAG, "in onConnected(), starting location updates");
+            startLocationUpdates();
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.i(TAG, "Connection suspended");
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = " + connectionResult.getErrorCode());
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        Log.i(TAG, "Building GoogleApiClient");
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+    }
+
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+    protected void buildLocationSettingsRequest() {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(mLocationRequest);
+        mLocationSettingsRequest = builder.build();
+    }
+
+    protected void startLocationUpdates() {
+
+    }
+
+    private void updateFirebase() {
+
+    }
+
 
 }
