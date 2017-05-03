@@ -69,6 +69,11 @@ public class MapLocations extends BaseActivity implements OnMapReadyCallback, Co
     public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
     String currentUserEmail;
+    String currentUserUID;
+    String enteredCode;
+    private static final String GROUPS = "groups";
+    private static final String STATUS = "status";
+    private static final String USERS = "users";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,11 +81,14 @@ public class MapLocations extends BaseActivity implements OnMapReadyCallback, Co
         setContentView(R.layout.activity_map_locations);
 
         currentUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+        currentUserUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        enteredCode = getIntent().getStringExtra("GROUP_CODE");
 
         mRequestingLocationUpdates = false;
 
@@ -183,6 +191,10 @@ public class MapLocations extends BaseActivity implements OnMapReadyCallback, Co
     }
 
     @Override
+    public void onBackPressed() {
+    }
+
+    @Override
     public void onLocationChanged(Location location) {
         //mDatabase.child("groups").child()
     }
@@ -236,6 +248,8 @@ public class MapLocations extends BaseActivity implements OnMapReadyCallback, Co
 
     private void updateFirebase() {
 
+        // User myUser = new User (currentUserEmail, currentUserUID, 0/**/, 0/**/,
+                // mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(currentUserUID).child())
     }
 
 

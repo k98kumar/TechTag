@@ -9,15 +9,17 @@ public class User {
     public String uid;
     public long longitude;
     public long latitude;
+    public String tagged;
 
     User()  {
 
     }
 
-    public User(String email, String uid, long longitude, long latitude) {
+    public User(String email, String uid, long longitude, long latitude, String tagged) {
         this.email = email;
         this.uid = uid;
         this.longitude = longitude;
         this.latitude = latitude;
+        this.tagged = tagged;
     }
 }

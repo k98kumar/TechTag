@@ -1,12 +1,10 @@
 package com.example.kash.techtag;
 
-import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -19,13 +17,10 @@ import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.concurrent.CountDownLatch;
-
 public class CreateJoin extends BaseActivity implements View.OnClickListener {
 
     String createOrJoin = "";
     String groupName;
-
     String currentUserEmail;
     String currentUserUID;
 
@@ -40,70 +35,31 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
     String enteredCode = "";
 
     private static final String GROUPS = "groups";
+    private static final String USERS = "users";
 
     boolean inUse;
+
+    TextView createView;
+    TextView joinView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_join);
 
-        // Get the email of the user from previous activity
-        // currentUserEmail = getIntent().getStringExtra("EMAIL");
         currentUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
         currentUserUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        user = new User(currentUserEmail, currentUserUID, 0, 0);
+        user = new User(currentUserEmail, currentUserUID, 0, 0, "");
         hello = "hello";
 
-        final Button selectButton = (Button) findViewById(R.id.selectButtonCreateJoin);
-        final TextView createView = (TextView) findViewById(R.id.createLabel);
-        final TextView joinView = (TextView) findViewById(R.id.joinLabel);
+        // createView = (TextView) findViewById(R.id.createLabel);
+        // joinView = (TextView) findViewById(R.id.joinLabel);
         mStatusOutput = (TextView) findViewById(R.id.statusOutputCreateJoin);
         nameInput = (EditText) findViewById(R.id.createJoinInput);
 
         mStatusOutput.setText("");
 
-        nameInput.setFocusable(false);
-        nameInput.setFocusable(true);
-        nameInput.setFocusableInTouchMode(true);
-
-        runRepeat();
-
-        createView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                createView.setBackground(getDrawable(R.color.loginBlue));
-                createView.setTextColor(Color.parseColor("#FFFFFF"));
-                joinView.setBackground(getDrawable(R.color.white));
-                joinView.setTextColor(Color.parseColor("#000000"));
-                nameInput.setFocusable(false);
-                nameInput.setFocusable(true);
-                nameInput.setFocusableInTouchMode(true);
-                createOrJoin = "create";
-            }
-        });
-
-        joinView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                joinView.setBackground(getDrawable(R.color.loginBlue));
-                joinView.setTextColor(Color.parseColor("#FFFFFF"));
-                createView.setBackground(getDrawable(R.color.white));
-                createView.setTextColor(Color.parseColor("#000000"));
-                nameInput.setFocusable(false);
-                nameInput.setFocusable(true);
-                nameInput.setFocusableInTouchMode(true);
-                createOrJoin = "join";
-            }
-        });
-
-    }
-
-    @Override
-    public void onResume() {
-        runRepeat();
-        super.onResume();
     }
 
     @Override
@@ -126,6 +82,23 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
                 return;
             }
             enteredCode = nameInput.getText().toString();
+            if (codeInUse(mDatabase, enteredCode)) {
+                Log.d("CREATE", "codeInUse");
+                mStatusOutput.setText(R.string.code_in_use);
+                mStatusOutput.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mStatusOutput.setText("");
+                    }
+                }, 4000);
+            } else {
+                Log.d("CREATE", "codeNotInUse");
+                // mDatabase.child(GROUPS).child(enteredCode).child(user.uid).setValue(user);
+                mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(user.uid).setValue(user);
+                listPlayersIntent.putExtra("GROUP_CODE", enteredCode);
+                CreateJoin.this.startActivity(listPlayersIntent);
+            }
+            /*
             switch (createOrJoin) {
                 case "create":
                     if (codeInUse(mDatabase, enteredCode)) {
@@ -139,7 +112,8 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
                         }, 4000);
                     } else {
                         Log.d("CREATE", "codeNotInUse");
-                        mDatabase.child(GROUPS).child(enteredCode).child(user.uid).setValue(user);
+                        // mDatabase.child(GROUPS).child(enteredCode).child(user.uid).setValue(user);
+                        mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(user.uid).setValue(user);
                         listPlayersIntent.putExtra("GROUP_CODE", enteredCode);
                         CreateJoin.this.startActivity(listPlayersIntent);
                     }
@@ -184,12 +158,7 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
                         }
                     }, 4000);
                     break;
-            }
-        }
-        if (i == R.id.button2) {
-            Intent tempIntent = new Intent(CreateJoin.this, MapLocations.class);
-            Log.d("Intent", "received");
-            startActivity(tempIntent);
+            } */
         }
     }
 
@@ -203,11 +172,9 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
     private boolean codeInUse(DatabaseReference dataRef, final String codeToCheck) {
         inUse = false;
         Log.d("inUse", "setToFalse");
-        // final CountDownLatch latch = new CountDownLatch(1);
         dataRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                // latch.countDown();
                 if (!dataSnapshot.child(GROUPS).hasChild(codeToCheck)) {
                     inUse = true;
                     Log.d("inUse", "setToTrue");
@@ -219,45 +186,41 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
             }
         });
         Log.d("Return inUse", inUse + "");
-        // try {
-            // latch.await();
-        // } catch(InterruptedException e) {
-            // e.printStackTrace();
-        // }
         return inUse;
     }
 
-    private void runRepeat() {
-        Log.d(enteredCode, "runRepeat: ");
-        mDatabase.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+    private void setupClicks() {
+        nameInput.setFocusable(false);
+        nameInput.setFocusable(true);
+        nameInput.setFocusableInTouchMode(true);
 
+        createView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                createView.setBackground(getDrawable(R.color.loginBlue));
+                createView.setTextColor(Color.parseColor("#FFFFFF"));
+                joinView.setBackground(getDrawable(R.color.white));
+                joinView.setTextColor(Color.parseColor("#000000"));
+                nameInput.setFocusable(false);
+                nameInput.setFocusable(true);
+                nameInput.setFocusableInTouchMode(true);
+                createOrJoin = "create";
             }
+        });
 
+        joinView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.child(GROUPS).child(enteredCode).getChildrenCount() == 1) {
-                    mDatabase.child(GROUPS).child(enteredCode).child("status").setValue(null);
-                } else if (dataSnapshot.child(GROUPS).child(enteredCode).getChildrenCount() < 5) {
-                    mDatabase.child(GROUPS).child(enteredCode).child("status").setValue("");
-                }
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
+            public void onClick(View v) {
+                joinView.setBackground(getDrawable(R.color.loginBlue));
+                joinView.setTextColor(Color.parseColor("#FFFFFF"));
+                createView.setBackground(getDrawable(R.color.white));
+                createView.setTextColor(Color.parseColor("#000000"));
+                nameInput.setFocusable(false);
+                nameInput.setFocusable(true);
+                nameInput.setFocusableInTouchMode(true);
+                createOrJoin = "join";
             }
         });
     }
+
 }
