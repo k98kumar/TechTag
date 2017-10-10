@@ -26,8 +26,6 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
 
     User user;
 
-    boolean isCreate = false;
-
     EditText nameInput;
     TextView mStatusOutput;
     String hello;
@@ -50,15 +48,17 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
         currentUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
         currentUserUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        user = new User(currentUserEmail, currentUserUID, 0, 0, "");
+        user = new User(currentUserEmail, currentUserUID, 0, 0, "not tagged");
         hello = "hello";
 
-        // createView = (TextView) findViewById(R.id.createLabel);
-        // joinView = (TextView) findViewById(R.id.joinLabel);
+        createView = (TextView) findViewById(R.id.createLabel);
+        joinView = (TextView) findViewById(R.id.joinLabel);
         mStatusOutput = (TextView) findViewById(R.id.statusOutputCreateJoin);
         nameInput = (EditText) findViewById(R.id.createJoinInput);
 
         mStatusOutput.setText("");
+
+        setupClicks();
 
     }
 
@@ -82,6 +82,7 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
                 return;
             }
             enteredCode = nameInput.getText().toString();
+            /*
             if (codeInUse(mDatabase, enteredCode)) {
                 Log.d("CREATE", "codeInUse");
                 mStatusOutput.setText(R.string.code_in_use);
@@ -97,8 +98,7 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
                 mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(user.uid).setValue(user);
                 listPlayersIntent.putExtra("GROUP_CODE", enteredCode);
                 CreateJoin.this.startActivity(listPlayersIntent);
-            }
-            /*
+            } */
             switch (createOrJoin) {
                 case "create":
                     if (codeInUse(mDatabase, enteredCode)) {
@@ -112,7 +112,6 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
                         }, 4000);
                     } else {
                         Log.d("CREATE", "codeNotInUse");
-                        // mDatabase.child(GROUPS).child(enteredCode).child(user.uid).setValue(user);
                         mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(user.uid).setValue(user);
                         listPlayersIntent.putExtra("GROUP_CODE", enteredCode);
                         CreateJoin.this.startActivity(listPlayersIntent);
@@ -121,8 +120,8 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
                 case "join":
                     if (codeInUse(mDatabase, enteredCode)) {
                         Log.d("JOIN", "codeInUse");
-
-                        mDatabase.child(GROUPS).child(enteredCode).runTransaction(new Transaction.Handler() {
+                        // mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(user.uid).setValue(user);
+                        mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(user.uid).runTransaction(new Transaction.Handler() {
                             @Override
                             public Transaction.Result doTransaction(MutableData mutableData) {
                                 mutableData.setValue(currentUserEmail);
@@ -134,8 +133,6 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
                                 Log.d("onComplete", b + "");
                             }
                         });
-
-                        // mDatabase.child(GROUPS).child(enteredCode).push().setValue(currentUserEmail);
                         listPlayersIntent.putExtra("GROUP_CODE", enteredCode);
                         CreateJoin.this.startActivity(listPlayersIntent);
                     } else {
@@ -158,7 +155,7 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
                         }
                     }, 4000);
                     break;
-            } */
+            }
         }
     }
 
@@ -171,7 +168,6 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
      */
     private boolean codeInUse(DatabaseReference dataRef, final String codeToCheck) {
         inUse = false;
-        Log.d("inUse", "setToFalse");
         dataRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -185,7 +181,15 @@ public class CreateJoin extends BaseActivity implements View.OnClickListener {
             public void onCancelled(DatabaseError databaseError) {
             }
         });
-        Log.d("Return inUse", inUse + "");
+        /*
+        while (!isFinished.equals("finished")) {
+            try {
+                wait(100);
+                Log.d("Waited", ".1 Seconds");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } */
         return inUse;
     }
 

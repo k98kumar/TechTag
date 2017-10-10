@@ -7,19 +7,19 @@ package com.example.kash.techtag;
 public class User {
     public String email;
     public String uid;
-    public long longitude;
-    public long latitude;
+    public double longitude;
+    public double latitude;
     public String tagged;
 
     User()  {
 
     }
 
-    public User(String email, String uid, long longitude, long latitude, String tagged) {
+    public User(String email, String uid, double latitude, double longitude, String tagged) {
         this.email = email;
         this.uid = uid;
-        this.longitude = longitude;
         this.latitude = latitude;
+        this.longitude = longitude;
         this.tagged = tagged;
     }
 }

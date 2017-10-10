@@ -50,10 +50,10 @@ public class SetupGPS extends AppCompatActivity {
         allow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!enabled) {
-                    Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    SetupGPS.this.startActivity(settingsIntent);
-                }
+            if (!enabled) {
+                Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                SetupGPS.this.startActivity(settingsIntent);
+            }
             }
         });
 

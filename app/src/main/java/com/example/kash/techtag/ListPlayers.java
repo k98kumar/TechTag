@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -17,6 +18,8 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class ListPlayers extends BaseActivity {
 
@@ -52,10 +55,36 @@ public class ListPlayers extends BaseActivity {
     }
 
     @Override
+    protected void onStop() {
+        mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(currentUserUID).removeValue();
+        super.onStop();
+    }
+
+    @Override
     public void onBackPressed() {
-        // mDatabase.child(GROUPS).child(enteredCode).child(currentUserUID).removeValue();
         mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(currentUserUID).removeValue();
         super.onBackPressed();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_info) {
+            openInfo();
+            return true;
+        }
+        if (id == R.id.action_sign_out) {
+            mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(currentUserUID).removeValue();
+            signOut();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -66,17 +95,8 @@ public class ListPlayers extends BaseActivity {
         startGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("hello", mDatabase.child(GROUPS).child(enteredCode).child(STATUS).toString());
                 mDatabase.child(GROUPS).child(enteredCode).child(BUTTON).setValue("pressed");
                 getStatusValue(enteredCode);
-                /*
-                if (mDatabase.child(GROUPS).child(enteredCode).child(STATUS).equals("ready")) {
-                    mDatabase.child(GROUPS).child(enteredCode).child(STATUS).setValue("start");
-                    Intent startGameIntent = new Intent(ListPlayers.this, MapLocations.class);
-                    startGameIntent.putExtra("GROUP_CODE", enteredCode);
-                    ListPlayers.this.startActivity(startGameIntent);
-                }
-                */
             }
         });
     }
@@ -86,7 +106,7 @@ public class ListPlayers extends BaseActivity {
      * onChildRemoved methods inside addChildEventListener
      */
     private void runThroughout() {
-        // mDatabase.addChildEventListener(new ChildEventListener() {
+        // mDatabase.addListenerForSingleValueEvent(new ChildEventListener() {
         mDatabase.child(GROUPS).child(enteredCode).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -97,12 +117,17 @@ public class ListPlayers extends BaseActivity {
                 if (dataSnapshot.getChildrenCount() == 4) {
                     mDatabase.child(GROUPS).child(enteredCode).child(STATUS).setValue("ready");
                 }
-                getStatusValue(enteredCode);
+                // getStatusValue(enteredCode);
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
+                /*
+                if (dataSnapshot.child(STATUS).getValue().equals("start")) {
+                    Intent startStatusIntent = new Intent(ListPlayers.this, MapLocations.class);
+                    ListPlayers.this.startActivity(startStatusIntent);
+                }
+                */
             }
 
             @Override
@@ -150,6 +175,7 @@ public class ListPlayers extends BaseActivity {
      */
     private void getStatusValue(final String code) {
         mDatabase.child(GROUPS).child(code).addListenerForSingleValueEvent(new ValueEventListener() {
+        // mDatabase.child(GROUPS).child(code).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.child(STATUS).getValue().toString().equals("ready")) {

@@ -44,6 +44,9 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
 import static com.google.android.gms.maps.model.LatLngBounds.*;
 
@@ -248,9 +251,23 @@ public class MapLocations extends BaseActivity implements OnMapReadyCallback, Co
 
     private void updateFirebase() {
 
-        // User myUser = new User (currentUserEmail, currentUserUID, 0/**/, 0/**/,
-                // mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(currentUserUID).child())
+        // User myUser = new User (currentUserEmail, currentUserUID, mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(),
+                // mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(currentUserUID).child("tagged"));
+
+        // mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(currentUserUID).setValue(myUser);
     }
 
+    private void snapshotListener() {
+        mDatabase.child(GROUPS).child(enteredCode).child(USERS).child(currentUserUID).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
 
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
 }
